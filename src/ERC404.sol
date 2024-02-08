@@ -162,7 +162,7 @@ abstract contract ERC404 is Ownable {
         // This ensures that the capability to mint new tokens cannot be exploited 
         // by reopen whitelist state.
         if (state) {
-            uint256[] ownedList = _owned[target];
+            uint256[] memory ownedList = _owned[target];
             for (uint256 i = 0; i < ownedList.length; i++) {
                 _burn(target);
             }
