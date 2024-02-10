@@ -12,4 +12,4 @@ The ERC721 implementation here is a bit non-standard, where tokens are instead b
 
 ## Licensing
 
-This source code is unlicensed, and free for anyone to use as they please. Any effort to improve source or explore the concept further is encouraged!
+This source code is MIT, and free for anyone to use as they please. Any effort to improve source or explore the concept further is encouraged!
