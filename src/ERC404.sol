@@ -325,18 +325,14 @@ abstract contract ERC404 is Ownable {
         if (!whitelist[from]) {
             uint256 tokens_to_burn = (balanceBeforeSender / unit) -
                 (balanceOf[from] / unit);
-            for (uint256 i = 0; i < tokens_to_burn; i++) {
-                _burn(from);
-            }
+            _burn(from, tokens_to_burn);
         }
 
         // Skip minting for certain addresses to save gas
         if (!whitelist[to]) {
             uint256 tokens_to_mint = (balanceOf[to] / unit) -
                 (balanceBeforeReceiver / unit);
-            for (uint256 i = 0; i < tokens_to_mint; i++) {
-                _mint(to);
-            }
+            _mint(to, tokens_to_mint);
         }
 
         emit ERC20Transfer(from, to, amount);
@@ -348,40 +344,47 @@ abstract contract ERC404 is Ownable {
         return 10 ** decimals;
     }
 
-    function _mint(address to) internal virtual {
+    function _mint(address to, uint256 amount) internal virtual {
         if (to == address(0)) {
             revert InvalidRecipient();
         }
 
-        unchecked {
-            minted++;
-        }
-
         uint256 id = minted;
 
-        if (_ownerOf[id] != address(0)) {
-            revert AlreadyExists();
+        unchecked {
+            minted += amount;
         }
 
-        _ownerOf[id] = to;
-        _owned[to].push(id);
-        _ownedIndex[id] = _owned[to].length - 1;
-
-        emit Transfer(address(0), to, id);
+        uint256 count = _owned[to].length;
+        for (uint256 i = 0; i < amount; i++) {
+            id++;
+            if (_ownerOf[id] != address(0)) {
+                revert AlreadyExists();
+            }
+    
+            _ownerOf[id] = to;
+            _owned[to].push(id);
+            _ownedIndex[id] = count + i;
+    
+            emit Transfer(address(0), to, id);
+        }
     }
 
-    function _burn(address from) internal virtual {
+    function _burn(address from, uint256 amount) internal virtual {
         if (from == address(0)) {
             revert InvalidSender();
         }
 
-        uint256 id = _owned[from][_owned[from].length - 1];
-        _owned[from].pop();
-        delete _ownedIndex[id];
-        delete _ownerOf[id];
-        delete getApproved[id];
-
-        emit Transfer(from, address(0), id);
+        uint256 count = _owned[from].length - 1;
+        for (uint256 i = 0; i < amount; i++) {
+            uint256 id = _owned[from][count - i];
+            _owned[from].pop();
+            delete _ownedIndex[id];
+            delete _ownerOf[id];
+            delete getApproved[id];
+    
+            emit Transfer(from, address(0), id);
+        }
     }
 
     function _setNameSymbol(
